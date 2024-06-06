@@ -1,12 +1,15 @@
 import mysql.connector 
 from funciones import *
-#conectar a la base de datos hospital
+
+#Defino conexion como un objeto MYSQLConnection
 conexion = mysql.connector.connect(
     user = "root",
     password = "azurro03",
     host = "localhost",
     database = "negocio"
 )
+
+#Defino puntero como un objeto MYSQLCursor
 puntero = conexion.cursor()
 
 '''
@@ -24,6 +27,12 @@ puntero = conexion.cursor()
 #menu()
 '''agregar productos'''
 # create(puntero, conexion)
-# puntero.execute("select * from productos")
-# for i in puntero: 
-#     print(i)
+#puntero.execute("select nombre from productos;")
+
+
+
+verificar = read(puntero)
+print(f"verificar main.py: {verificar}")
+
+if  verificar == False:
+    print(f'¡¡El producto no se encuentra!!')

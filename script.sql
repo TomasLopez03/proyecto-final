@@ -25,11 +25,11 @@ CREATE TABLE `negocio`.`ventas` (
     ON UPDATE NO ACTION);
 
 
+use negocio;
+update productos set precio = 7800 where id_productos = 2;
 
 
-
-
-
+select * from productos ;
 
 
 
