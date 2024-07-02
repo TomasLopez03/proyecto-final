@@ -23,16 +23,38 @@ puntero = conexion.cursor()
 
 
 
-'''mostrando menu'''
-#menu()
-'''agregar productos'''
-# create(puntero, conexion)
+while True: 
+    '''mostrando menu'''
+    menu()
+    opcion = int(input('Ingrese su opcion: '))
+    match opcion: 
+        case 1: 
+            '''agregar productos'''
+            create(puntero, conexion)
+            print(f'¡¡¡Producto agregado con exito!!!')
+        case 2:
+            '''Mostrar productos'''
+            read(puntero)
+        case 3:
+            '''Actualizar producto'''
+            update(puntero, conexion)
+        case 4: 
+            '''Eliminar producto'''
+            delete(puntero, conexion)
+        case 5:
+            aux = 0
+            while True:
+                aux += add_venta(puntero, conexion)
+                op = str(input('Ingresara otro producto? "s" para si/ "n" para no: ')).lower()
+                if op == "n":
+                    print(f'El total de la compra es: ${aux}')
+                    break
+        case 6: 
+            pass
+        case 7:
+            pass
+        case 8:
+            break
+
 #puntero.execute("select nombre from productos;")
-
-
-
-verificar = read(puntero)
-print(f"verificar main.py: {verificar}")
-
-if  verificar == False:
-    print(f'¡¡El producto no se encuentra!!')
+# producto = "coca cola"
