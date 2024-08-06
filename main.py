@@ -33,7 +33,11 @@ while True:
         case 4: 
             '''Eliminar producto'''
             delete(puntero, conexion)
-        case 5:
+        case 5: 
+            '''Agregar Categoria'''
+            create_cat(puntero, conexion)
+            clean_screen(2)
+        case 6:
             '''Agregar Ventas'''
             aux = 0
             en_venta = []
@@ -47,9 +51,10 @@ while True:
                     print(f'El total de la compra es: ${aux}')
                     print(f'Presione cualquier tecla cuando desee continuear...')
                     msvcrt.getch()
+                    clean_screen(1)
                     break
                 clean_screen(1)
-        case 6: 
+        case 7: 
             opcion = opcion_venta()
             clean_screen(1)
             match opcion:
@@ -60,32 +65,33 @@ while True:
                     from ventas a inner join productos b on a.idprodu = b.idprod 
                     where fecha like '{año}-{mes}%'"""
                     read_puntero(puntero, sql, HEADERS_VENTA, CENTER_VENTA)
-                    sql = f"select sum(precio) from ventas"
+                    sql = f"select sum(precio) from ventas where fecha like '{año}-{mes}%'"
                     puntero.execute(sql)
                     precio = show_precio(puntero)
-                    print(f'El total de las ventas del mes es: ${precio}')
+                    if precio is not None:
+                        print(f'El total de las ventas del mes es: ${precio}')
                     print(f'Presione cualquier tecla cuando desee continuear...')
                     msvcrt.getch()
                     clean_screen(1)
                 case 2:
-                    producto = str(input('Ingrese el nombre del producto: '))
-                    tamaño = str(input('Ingrese el tamaño del producto: '))
+                    id = int(input('Ingrese el id del producto: '))
                     año = str(input('Ingrese el año: '))
                     mes = verificar_mes()
                     sql = f"""select idventas, nombre, tamaño, cantidad, a.precio, fecha 
                     from ventas a inner join productos b on a.idprodu = b.idprod 
-                    where nombre = '{producto}' and tamaño = '{tamaño}' and fecha like '{año}-{mes}%'"""
+                    where a.idprodu = {id} and fecha like '{año}-{mes}%'"""
                     read_puntero(puntero, sql, HEADERS_VENTA, CENTER_VENTA)
                     sql = f"""select sum(a.precio) from ventas a 
                     inner join productos b on a.idprodu = b.idprod 
-                    where nombre = '{producto}' and tamaño ='{tamaño}'"""
+                    where a.idprodu = {id} and fecha like '{año}-{mes}%'"""
                     puntero.execute(sql)
                     precio = show_precio(puntero)
-                    print(f'El total de las ventas en el mes es de: ${precio}')
+                    if precio is not None:
+                        print(f'El total de las ventas en el mes es de: ${precio}')
                     print(f'Presione cualquier tecla cuando desee continuear...')
                     msvcrt.getch()
                     clean_screen(1)
-        case 7:
+        case 8:
             print("¡¡¡Esta saliendo del programa!!!")
             clean_screen(2)
             break

@@ -9,14 +9,21 @@ HEADERS_VENTA = ["cod venta", "producto", "tamaño", "cantidad", "precio", "fech
 CENTER_VENTA = (("center",)*6)
 
 def menu():
+    '''
+        Mostrar menu del programa.
+
+        Muestra las opciones del programa, pide al usuario
+        que ingrese la opcion y retorna la opcion
+    '''
     print("---------------------Menu del Sistema--------------------")
     print("\t\t\t 1 - Agregar Productos")
     print("\t\t\t 2 - Mostrar Productos")
     print("\t\t\t 3 - Actualizar Productos")
     print("\t\t\t 4 - Eliminar Productos")
-    print("\t\t\t 5 - Ingresar Ventas De Productos")
-    print("\t\t\t 6 - Ver Venta Total Productos")
-    print("\t\t\t 7 - Salir Del Gestor")
+    print("\t\t\t 5 - Agregar Categoria")
+    print("\t\t\t 6 - Ingresar Ventas De Productos")
+    print("\t\t\t 7 - Ver Venta Total Productos")
+    print("\t\t\t 8 - Salir Del Gestor")
     opcion = int(input('Ingrese la opcion que desea: '))
     return opcion
 
@@ -42,6 +49,8 @@ def ver_cat(puntero):
 
         :param puntero: object - Cursor en Mysql
 
+        Muestra el codigo y el nombre de todas
+        las categorias en la base de datos.
 
     '''
     sql = "select idcat, nombre from categorias"
@@ -49,28 +58,36 @@ def ver_cat(puntero):
     center = (("center",)*2)
     read_puntero(puntero,sql,head,center)
 
+'''CATEGORIAS'''
+
+def create_cat(puntero,conexion):
+    nombre = str(input('Ingrese el nombre de la nueva categoria: ')).lower()
+    sql = f"""insert into categorias (nombre) values ('{nombre}')"""
+    puntero.execute(sql)
+    conexion.commit()
+    print(f'Categoria crreda exitosamente!!!')
+
 ''' CRUD DE LOS PRODUCTOS'''
 
 def create(puntero, conexion):
     '''
-        Crea un registro en la tabla productos.
+        Crea un un nuevo producto en la base de datos.
 
         :param puntero: object MYSQLCursor.
         :param conexion: object MYSQLConnection.
 
-        Esta funcion pide el nombre, stock, precio del producto
-        al contenido de la variable local nombre lo convierte en
-        minusculas.
-        En la variable local sql se define la query, con el metodo
-        execute() del objeto puntero se ejecuta la query, con el
-        metodo commit() del objeto conexion se guardan los cambios.
+        Esta funcion pide las caracteristicas del producto,
+        al nombre y al tamaño del producto lo convierte en minusculas.
+        En la variable local sql se define la consulta a la base de datos, 
+        con el metodo execute() del objeto puntero se ejecuta la consulta, 
+        con el metodo commit() del objeto conexion se guardan los cambios.
     '''
     nombre = str(input('Ingrese el nombre del producto: ')).lower()
     size = str(input('Ingrese el tamaño del producto: ')).lower()
     stock = int(input('Ingrese la cantidad stock: '))
     precio = float(input('Ingrese el precio el producto: '))
     ver_cat(puntero)
-    cat = int(input('Ingrese el numero de la categoria del producto:'))
+    cat = int(input('Ingrese el numero de la categoria del producto: '))
     sql = f"""insert into  productos (nombre, tamaño, idcat, stock,
     precio) values ('{nombre}', '{size}', {cat}, {stock}, {precio})"""
     puntero.execute(sql)
@@ -78,7 +95,11 @@ def create(puntero, conexion):
 
 def read_puntero(puntero, sql, headers, center):
     puntero.execute(sql)
-    print(tabulate(puntero, headers=headers, tablefmt="fancy_grid", colalign=center))
+    try:
+        print(tabulate(puntero, headers=headers, tablefmt="fancy_grid", colalign=center))
+    except:
+        print(f'No hay ventas registradas!!')
+
 
 def opcion_prod():
     print("1 - Ver todos los prodcutos")
@@ -92,18 +113,18 @@ def read(puntero):
     match opcion:
         case 1:
             sql = f"""select a.idprod, a.nombre, a.tamaño, b.nombre as categoria, a.stock, a.precio 
-            from productos a inner join categorias b on a.idcat = b.idcat order by a.nombre"""
+            from productos a inner join categorias b on a.idcat = b.idcat """
             read_puntero(puntero, sql, HEADERS_PROD, CENTER_PROD)
             print(f'Presione cualquier tecla cuando desee continuear...')
             msvcrt.getch()
             os.system("cls")
         case 2:
             while True:
-                producto = str(input('Ingrese el nombre del producto: ')).lower()
+                producto = int(input('Ingrese el id del producto: '))
                 if verificar_producto(puntero, producto) == True:
-                    sql = f"""select a.idprod, a.nombre, a.tamaño, b.nombre as categoria, a.stock, a.precio 
+                    sql = f"""select idprod,a.nombre,tamaño,b.nombre as categoria,stock,precio 
                     from productos a inner join categorias b on a.idcat = b.idcat 
-                    where a.nombre like '{producto}%' """
+                    where idprod = {producto}"""
                     read_puntero(puntero, sql, HEADERS_PROD, CENTER_PROD)
                     pregunta = str(input('Desea ver otro producto? "s" para si/"n" para no: ')).lower()
                     if pregunta == 'n':
@@ -114,7 +135,7 @@ def read(puntero):
                     print(f'!!El producto no existe, intente de nuevo!!')
                     clean_screen(2)
 
-def verificar_producto(puntero, producto):
+def verificar_producto(puntero, id):
     '''
         Verifica si un producto esta en la tabla productos.
 
@@ -135,12 +156,12 @@ def verificar_producto(puntero, producto):
         aux es igual a 1, de serlo retorna True, de lo
         contrario retorna False.
     '''
-    sql = f"select distinct nombre from productos"
+    sql = f"select idprod from productos"
     puntero.execute(sql)
     aux = 0
     for i in puntero:
         for j in i:
-            if producto == j:
+            if id == j:
                 aux += 1
     if aux == 1:
         return True
@@ -168,10 +189,8 @@ def update(puntero, conexion):
         datos actualizados en la base de datos.
     '''
     while True:
-        producto = str(input('Ingrese el nombre del producto que actualizara: ')).lower()
-        if verificar_producto(puntero, producto) == True:
-            lista_prod(puntero, producto)
-            id = int(input('Ingrese el codigo del producto que actualizara: '))
+        id = int(input('Ingrese el id del producto que actualizara: '))
+        if verificar_producto(puntero, id) == True:
             clean_screen(1)
             opcion = opcion_update()
             clean_screen(1)
@@ -233,6 +252,9 @@ def get_stock(puntero, id):
 def opcion_update():
     '''
         Muestra las opciones de actualizacion de productos.
+
+        Muestras las opciones de actualizacion, se ingresa
+        la opcion deseada y se retorna la opcion deseada.
     '''
     print("Opciones de actualizacion: ")
     print("1 - Actualizar stock")
@@ -245,15 +267,13 @@ def opcion_update():
     return opcion
 
 def lista_prod(puntero, producto):
-    sql = f"select * from productos where nombre = '{producto}'"
+    sql = f"select * from productos where idprod = '{producto}'"
     read_puntero(puntero, sql, HEADERS_PROD, CENTER_PROD)
 
 def delete(puntero, conexion):
     while True:
-        producto = str(input('Ingrese el nombre del producto: '))
-        if verificar_producto(puntero, producto) == True:
-            lista_prod(puntero, producto)
-            id = int(input('Ingrese el numero del producto: '))
+        id = str(input('Ingrese el id del producto: '))
+        if verificar_producto(puntero, id) == True:
             sql = f"delete from productos where idprod = '{id}'"
             pregunta = str(input('Esta seguro de eliminar este producto? "s/n": ')).lower()
             if pregunta == "s":
@@ -277,14 +297,12 @@ def delete(puntero, conexion):
 
 def add_venta(puntero, conexion,fecha, en_venta):
     while True:
-        producto = str(input('Ingrese el nombre del producto: '))
-        if verificar_producto(puntero, producto) == True:
+        id = int(input('Ingrese el id del producto: '))
+        if verificar_producto(puntero, id) == True:
             break
         else:
             print(f'No se encontro el producto. Intentelo de nuevo...!!!')
-            clean_screen(1)
-    lista_prod(puntero, producto)
-    id = int(input('Ingrese el codigo del producto: '))
+            clean_screen(2)
     cantidad = float(input('Ingrese la cantidad del producto: '))
     precio = get_precio(puntero, id, cantidad)
     clean_screen(1)
